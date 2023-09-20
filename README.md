@@ -5,3 +5,4 @@
 目前實現演算法
 * RSA sign
 * RSA hash sign
+* Rabin sign
