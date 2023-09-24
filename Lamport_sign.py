@@ -36,28 +36,30 @@ sk = (sk_a, sk_b)
 pk = (pk_a, pk_b)
 
 
-def sign(m, pk):
+def sign(m, sk):
     h = hashlib.new(H)
     h.update(m)
     hm = int(h.hexdigest(), 16)
     hm_bit = bin(hm)[2:]
     sign_list = []
     for i in range(len(hm_bit)):
-        sign_list.append(pk[int(hm_bit[i])][i])
-        pk[0 if int(hm_bit[i]) else 1][i] = -1
+        sign_list.append(sk[int(hm_bit[i])][i])
     return sign_list
 
 
-def verify(m, pk):
+def verify(m, sk, pk):
     h = hashlib.new(H)
     h.update(m)
     hm = int(h.hexdigest(), 16)
     hm_bit = bin(hm)[2:]
     for i in range(len(hm_bit)):
-        if pk[0 if int(hm_bit[i]) else 1][i]!=-1:
+        h = hashlib.new(H)
+        h.update(long_to_bytes(sk[i]))
+        h_sk = int(h.hexdigest(), 16)
+        if h_sk != pk[1 if int(hm_bit[i]) else 0][i]:
             return False
     return True
 
 
-signed_list = sign(m, pk)  # 用公鑰簽名
-print(verify(m, pk))  # 用私鑰驗證
+signed_sk_list = sign(m, sk)  # 用私鑰簽名
+print(verify(m, signed_sk_list, pk))  # 用公私鑰驗證，這裡的私鑰是一半的數字被歸零或省略的私鑰
