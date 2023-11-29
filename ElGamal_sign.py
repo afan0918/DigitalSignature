@@ -46,4 +46,4 @@ def verify(m, r, s, H):
 
 
 r, s = sign(m, p, g, x, H)  # 簽名
-print(verify(m, r, s, H))  # 用私鑰驗證
+print(verify(m, r, s, H))  # 驗證
