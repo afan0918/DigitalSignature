@@ -1,26 +1,25 @@
 import hashlib
 import math
 import random
-
 from Crypto.Util.number import getPrime, bytes_to_long, long_to_bytes
+
 
 # by https://en.wikipedia.org/wiki/ElGamal_signature_scheme
 
-# 1. Key generation
-# 1-1. Parameter generation
-p = getPrime(1024)
-q = getPrime(1024)
-H = 'sha256'
-g = random.randint(1, p - 1)
+def key_generation():
+    # Parameter generation
+    p = getPrime(1024)
+    q = getPrime(1024)
+    H = 'sha256'
+    g = random.randint(1, p - 1)
 
-# 1-2. Per-user keys
-x = random.randint(1, p - 2)
-y = pow(g, x, p)
+    # Per-user keys
+    x = random.randint(1, p - 2)
+    y = pow(g, x, p)
 
-m = b'afan'
+    return p, q, H, g, x, y
 
 
-# 2. Signing
 def sign(m, p, g, x, H):
     while True:
         k = random.randint(2, p - 2)
@@ -35,9 +34,8 @@ def sign(m, p, g, x, H):
             return r, s
 
 
-# 3. Verifying
-def verify(m, r, s, H):
-    if (r <= 0) | (r >= p) | (s <= 0) | (s >= p - 1):
+def verify(m, r, s, p, g, y, H):
+    if (r <= 0) or (r >= p) or (s <= 0) or (s >= p - 1):
         return False
     h = hashlib.new(H)
     h.update(m)
@@ -45,5 +43,14 @@ def verify(m, r, s, H):
     return pow(g, hm, p) == (pow(y, r, p) * pow(r, s, p)) % p
 
 
-r, s = sign(m, p, g, x, H)  # 簽名
-print(verify(m, r, s, H))  # 驗證
+# Key generation
+p, q, H, g, x, y = key_generation()
+
+m = b'afan'
+
+# Signing
+r, s = sign(m, p, g, x, H)
+verification_result = verify(m, r, s, p, g, y, H)
+
+# Output result
+print("Signature Verification Result:", verification_result)

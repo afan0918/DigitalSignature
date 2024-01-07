@@ -1,14 +1,7 @@
 import hashlib
-import random
-import string
-
-from Crypto.Util.number import getPrime, bytes_to_long, long_to_bytes
+from Crypto.Util.number import getPrime, long_to_bytes
 
 # 參考 https://iotazh.gitbook.io/iota-guidebook/tangle/transaction/ots
-
-m = b'afan'
-
-H = 'sha256'
 
 
 def generate_numbers(length):
@@ -26,14 +19,6 @@ def generate_pk(sk):
         hx = int(h.hexdigest(), 16)
         nums.append(hx)
     return nums
-
-
-sk_a = generate_numbers(256)  # 第一組私鑰
-sk_b = generate_numbers(256)  # 第二組私鑰
-pk_a = generate_pk(sk_a)
-pk_b = generate_pk(sk_b)
-sk = (sk_a, sk_b)
-pk = (pk_a, pk_b)
 
 
 def sign(m, sk):
@@ -61,5 +46,16 @@ def verify(m, sk, pk):
     return True
 
 
+m = b'afan'
+H = 'sha256'
+
+sk_a = generate_numbers(256)  # 第一組私鑰
+sk_b = generate_numbers(256)  # 第二組私鑰
+pk_a = generate_pk(sk_a)
+pk_b = generate_pk(sk_b)
+sk = (sk_a, sk_b)
+pk = (pk_a, pk_b)
+
 signed_sk_list = sign(m, sk)  # 用私鑰簽名
-print(verify(m, signed_sk_list, pk))  # 用公私鑰驗證，這裡的私鑰是一半的數字被歸零或省略的私鑰
+verification_result = verify(m, signed_sk_list, pk)  # 用公私鑰驗證，這裡的私鑰是一半的數字被歸零或省略的私鑰
+print("Signature Verification Result:", verification_result)

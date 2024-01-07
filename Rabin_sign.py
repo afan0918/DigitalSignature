@@ -1,44 +1,63 @@
 import hashlib
 import random
 import string
-
 import gmpy2
 from Crypto.Util.number import getPrime, bytes_to_long, long_to_bytes
 
-# 老師講的方式不知道為什麼實現不出來，參考以下連結
-# p, q 特別小是因為這樣算比較快，實務運用上再調大
-# https://cryptography.fandom.com/wiki/Rabin_signature_algorithm
+def generate_keypair(bit_length=8):
+    # 產生兩個特別小的質數 p 和 q
+    # 一定要這樣選是因為不然會算很久
+    p = getPrime(bit_length)
+    q = getPrime(bit_length)
 
-p = getPrime(8)
-q = getPrime(8)
+    # 計算 N
+    N = p * q
 
-N = p * q
-H = 'sha256'
-pk = N  # 公鑰
-padding_length = 100
+    # 選擇 Hash 函數
+    hash_function = 'sha256'
 
-m = b'afan'
+    # 返回公鑰
+    public_key = N
 
+    return public_key, hash_function
 
-def sign(m, N, H):
+def sign(message, public_key, hash_function, padding_length=100):
     while True:
+        # 生成隨機填充
         u = ''.join(random.SystemRandom().choice(string.printable) for _ in range(padding_length))
         u = u.encode('utf-8')
 
-        h = hashlib.new(H)
-        h.update(m + u)
-        hm = int(h.hexdigest(), 16)
-        if gmpy2.iroot(hm % N, 2)[1]:
-            return (u, gmpy2.iroot(hm % N, 2)[0])
+        # 計算消息和填充的哈希值
+        h = hashlib.new(hash_function)
+        h.update(message + u)
+        hashed_message = int(h.hexdigest(), 16)
 
+        # 檢查是否存在平方根
+        if gmpy2.iroot(hashed_message % public_key, 2)[1]:
+            return (u, gmpy2.iroot(hashed_message % public_key, 2)[0])
 
-def verify(sk, m, N, H):
-    h = hashlib.new(H)
-    h.update(m + sk[0])
-    hm = int(h.hexdigest(), 16) % N
-    return pow(sk[1], 2) == hm
+def verify(signature, message, public_key, hash_function):
+    u, sqrt_hashed_message = signature
 
+    # 計算消息和填充的哈希值
+    h = hashlib.new(hash_function)
+    h.update(message + u)
+    hashed_message = int(h.hexdigest(), 16) % public_key
 
-sk = sign(m, pk, H)  # 用私鑰簽名
-print(sk)
-print(verify(sk, m, pk, H))  # 用公鑰驗證
+    # 驗證簽章
+    return (pow(sqrt_hashed_message, 2, public_key) == hashed_message) or (pow(public_key - sqrt_hashed_message, 2, public_key) == hashed_message)
+
+# 生成金鑰對
+public_key, hash_function = generate_keypair()
+
+# 訊息
+message = b'afan'
+
+# 用私鑰簽署
+signature = sign(message, public_key, hash_function)
+
+# 用公鑰驗證
+verification_result = verify(signature, message, public_key, hash_function)
+
+# 輸出結果
+print("Signature Verification Result:", verification_result)

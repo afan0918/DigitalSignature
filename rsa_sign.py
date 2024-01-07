@@ -1,27 +1,48 @@
 from Crypto.Util.number import getPrime, bytes_to_long, long_to_bytes
 
-p = getPrime(1024)
-q = getPrime(1024)
+def generate_keypair(bit_length=1024):
+    # 產生兩個大質數 p 和 q
+    p = getPrime(bit_length)
+    q = getPrime(bit_length)
 
-N = p * q
-phi = (p - 1) * (q - 1)
-e = 65537
-d = pow(e, -1, phi)
-pk = (N, e)  # 公鑰
-sk = d  # 私鑰
+    # 計算 N 和歐拉函數(phi)
+    N = p * q
+    phi = (p - 1) * (q - 1)
 
-m = b'afan'
-m = bytes_to_long(m)
+    # 選擇一個公鑰 e
+    e = 65537
 
+    # 計算私鑰 d
+    d = pow(e, -1, phi)
 
-def sign(m, d, N):
-    return pow(m, d, N)
+    # 返回公鑰和私鑰
+    public_key = (N, e)
+    private_key = d
 
+    return public_key, private_key
 
-def verify(pk, m, a):
-    return m == pow(a, pk[1], pk[0])
+def sign(message, private_key, N):
+    # 使用私鑰簽署訊息
+    signature = pow(message, private_key, N)
+    return signature
 
+def verify(public_key, message, signature):
+    # 使用公鑰驗證簽章
+    return message == pow(signature, public_key[1], public_key[0])
 
-a = sign(m, sk, N)  # 用公鑰簽名
-print(verify(pk, m, a))  # 用私鑰驗證
-print(long_to_bytes(m))
+# 生成金鑰對
+public_key, private_key = generate_keypair()
+
+# 訊息轉換為數字
+message = b'afan'
+message_integer = bytes_to_long(message)
+
+# 用私鑰簽署
+signature = sign(message_integer, private_key, public_key[0])
+
+# 用公鑰驗證
+verification_result = verify(public_key, message_integer, signature)
+
+# 輸出結果
+print("Signature Verification Result:", verification_result)
+print("Original Message:", long_to_bytes(message_integer))
